@@ -1,0 +1,11 @@
+# dsh-btw v2 is a dual-face plugin. The Host half owns the trusted one-shot
+# RPC; package.json's dsh.client metadata contributes the transient Web UI.
+- insert:
+    - id: btw
+      name: 'dsh-btw'
+      config:
+        timeoutMs: 120000
+        sidechain:
+          mode: private-jsonl
+          retentionDays: 7
+          maxSessions: 500
