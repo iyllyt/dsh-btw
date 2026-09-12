@@ -37,13 +37,18 @@ export class BtwPiAiAdapter extends PiAiAdapter {
   }
 
   override async * stream(options: GenerateOptions): AsyncIterable<StreamChunk> {
-    const delegate = new PiAiAdapter(this.btwOptions)
+    // Freeze the selected profiles for this call before credential resolution.
+    const profiles = this.btwOptions.profiles()
+    const delegate = new PiAiAdapter({ ...this.btwOptions, profiles: () => profiles })
     const internal = delegate as unknown as PiAiAdapterInternals
     if (typeof internal.current !== 'function') {
-      throw new Error('dsh-btw: incompatible PiAiAdapter internals (expected rc.6 current())')
+      throw new Error('dsh-btw: incompatible PiAiAdapter internals (expected 0.1.5-rc.2 current())')
     }
     const snapshot = internal.current.call(delegate)
     const models = snapshot.models
+    if (typeof models?.streamSimple !== 'function') {
+      throw new Error('dsh-btw: incompatible PiAiAdapter internals (expected Models.streamSimple())')
+    }
     const original = models.streamSimple.bind(models)
     models.streamSimple = (...args: unknown[]): unknown => {
       const rawOptions = typeof args[2] === 'object' && args[2] !== null
@@ -73,7 +78,7 @@ export class BtwPiAiAdapter extends PiAiAdapter {
 }
 
 /**
- * Read only the constructor hooks of the already registered rc.6 pi-ai
+ * Read only the constructor hooks of the registered 0.1.5-rc.2 pi-ai
  * adapter. No registry entry or live adapter is changed. Other adapters use
  * the public LlmRuntime fallback.
  */
@@ -88,7 +93,13 @@ export function btwPiAiAdapter(
   const internal = candidate as PiAiAdapterInternals
   const isPiAi = candidate instanceof PiAiAdapter
     || (candidate as { constructor?: { name?: string } }).constructor?.name === 'PiAiAdapter'
-  if (!isPiAi || internal.config === undefined) return undefined
-  if (typeof internal.config.profiles !== 'function' || typeof internal.config.resolveApiKey !== 'function') return undefined
+  if (!isPiAi) return undefined
+  if (internal.config === undefined
+    || typeof internal.config.profiles !== 'function'
+    || typeof internal.config.resolveApiKey !== 'function'
+    || internal.config.auth?.credentials === undefined
+    || internal.config.auth.authContext === undefined) {
+    throw new Error('dsh-btw: incompatible PiAiAdapter constructor hooks (expected 0.1.5-rc.2 auth injection)')
+  }
   return new BtwPiAiAdapter(internal.config, onBoundaryMoved)
 }

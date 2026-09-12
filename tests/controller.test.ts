@@ -1,9 +1,9 @@
 import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client'
-import type { SessionId } from '@deepseek-ai/dsh-client-runtime/client'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { describe, expect, it, vi } from 'vitest'
 import { BtwController } from '../src/client/controller.js'
 
-vi.mock('@deepseek-ai/dsh-client-runtime/client', () => ({
+vi.mock('@deepseek-ai/dsh-client-store', () => ({
   createSnapshotStore: <T>(initial: T) => {
     let value = initial
     return {

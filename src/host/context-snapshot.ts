@@ -61,7 +61,8 @@ export function snapshotContext(agent: Agent, question: string): BtwContextSnaps
   return {
     parentSessionId: String(agent.session.id),
     config: structuredClone(header.config),
-    ...(header.system === undefined ? {} : { system: header.system }),
+    // Since DSH 0.1.5 the system prompt (including later updates) is part of
+    // deriveMessages(). Do not duplicate it in GenerateOptions.system.
     ...(header.tools === undefined ? {} : { tools: structuredClone(header.tools) }),
     sharedMessages,
     messages: [...sharedMessages, sideQuestion],

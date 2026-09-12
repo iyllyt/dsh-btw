@@ -1,4 +1,4 @@
-import type { SessionId } from '@deepseek-ai/dsh-client-runtime/client'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { describe, expect, it, vi } from 'vitest'
 import { createBtwInputSource } from '../src/client/input-source.js'
 import type { BtwController } from '../src/client/controller.js'

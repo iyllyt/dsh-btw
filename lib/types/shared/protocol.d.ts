@@ -1,5 +1,5 @@
-export declare const BTW_RPC_CHANNEL = "/btw-rpc";
-export declare const BTW_ASK_ENDPOINT = "ask";
+export declare const BTW_RPC_CHANNEL = "/api";
+export declare const BTW_ASK_ENDPOINT = "dsh-btw/ask";
 export interface BtwAskRequest {
     readonly requestId: string;
     readonly sessionId: string;

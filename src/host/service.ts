@@ -5,10 +5,11 @@ import type { HostConnectionHandle } from '@deepseek-ai/dsh-client-connection'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import type z from '@deepseek-ai/schemastery'
 import schema from '@deepseek-ai/schemastery'
-import { BTW_ASK_ENDPOINT, BTW_RPC_CHANNEL, readAskRequest, type BtwAskResponse } from '../shared/protocol.js'
+import { BTW_ASK_ENDPOINT, readAskRequest, type BtwAskResponse } from '../shared/protocol.js'
 import { snapshotContext } from './context-snapshot.js'
 import { runBtwOneShot } from './one-shot.js'
 import { PrivateSidechainKernel, type SidechainConfig } from './sidechain-kernel.js'
+import { createBtwRpcRoute } from './rpc-route.js'
 
 declare module '@deepseek-ai/cordis' {
   interface Context {
@@ -49,11 +50,9 @@ function warnTranscriptFailure(ctx: Context, phase: 'open' | 'close', error: unk
 export function installBtwService(ctx: Context, config: BtwConfig = {}): void {
   const timeoutMs = config.timeoutMs ?? 120_000
   const sidechains = new PrivateSidechainKernel(config.sidechain)
-  const connection = ctx.get('connection')
-  if (connection === undefined) throw new Error('dsh-btw requires the Host client-connection service')
+  const connection = ctx.connection
 
-  ctx.effect(() => connection.rpc.handle(
-    BTW_RPC_CHANNEL,
+  ctx.effect(() => connection.fetch.register(createBtwRpcRoute(
     async (endpoint, payload, transportSignal): Promise<RpcResult<unknown>> => {
       if (endpoint !== BTW_ASK_ENDPOINT) {
         return { ok: false, error: { code: 'bad-request', message: `Unknown BTW endpoint: ${endpoint}`, details: { issues: [] } } }
@@ -119,6 +118,6 @@ export function installBtwService(ctx: Context, config: BtwConfig = {}): void {
         return internal(message)
       }
     },
-    { authority: 'trusted-host' },
-  ))
+    // The shared /api carrier owns Host/Origin checks and browser authentication.
+  )))
 }

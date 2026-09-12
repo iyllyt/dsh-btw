@@ -1,9 +1,14 @@
 import { useEffect, useRef, useSyncExternalStore, type CSSProperties, type KeyboardEvent } from 'react'
-import { MarkdownText } from '@deepseek-ai/dsh-client-ui-primitives'
+import { MarkdownText, type MarkdownLabels } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { BtwController } from './controller.js'
 
 export interface BtwOverlayInjected {
   readonly controller: BtwController
+}
+
+const markdownLabels: MarkdownLabels = {
+  code: { copyLabel: 'Copy', copiedLabel: 'Copied' },
+  footnotes: 'Footnotes',
 }
 
 const dock: CSSProperties = {
@@ -128,7 +133,7 @@ export function BtwOverlay({ controller }: BtwOverlayInjected) {
           {state.status === 'error' && (
             <div role="alert" style={{ color: 'var(--dsw-alias-state-error-primary, var(--color-error, #e06c75))' }}>{state.error}</div>
           )}
-          {state.status === 'success' && <MarkdownText text={state.response} />}
+          {state.status === 'success' && <MarkdownText text={state.response} labels={markdownLabels} />}
         </div>
         <div style={footer}>
           <span>{state.status === 'running' ? 'The main agent keeps running' : '↑/↓ scroll · Enter, Space, or Esc dismiss'}</span>

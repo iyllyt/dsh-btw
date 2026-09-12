@@ -2,6 +2,7 @@ import { BlockAssembler, type ContentBlock, type LlmRuntime, type TokenUsage } f
 import type { BtwCacheStrategy } from '../shared/protocol.js'
 import type { BtwContextSnapshot } from './context-snapshot.js'
 import { btwPiAiAdapter } from './btw-pi-ai-adapter.js'
+import { SessionId } from '@deepseek-ai/dsh-session/types'
 
 export interface BtwOneShotResult {
   readonly response: string
@@ -38,7 +39,7 @@ export async function runBtwOneShot(
     messages: snapshot.messages,
     ...(snapshot.system === undefined ? {} : { system: snapshot.system }),
     ...(snapshot.tools === undefined ? {} : { tools: snapshot.tools }),
-    sessionId: sidechainId as never,
+    sessionId: SessionId(sidechainId),
     signal,
   }
 

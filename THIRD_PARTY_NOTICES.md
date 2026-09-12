@@ -8,7 +8,8 @@ version-pinned derivative/integration layer around DeepSeek Harness's
 under the MIT License:
 
 - https://github.com/deepseek-ai/deepseek-harness
-- pinned compatibility target: `@deepseek-ai/dsh-llm-pi-ai@0.1.0-rc.6`
+- compatibility targets: `@deepseek-ai/dsh-llm-pi-ai@0.1.5-rc.1` and `0.1.5-rc.2`
+- inspected source: `dsh-v0.1.5-rc.2`, commit `fb2c4b9e698e30edb738bca4cf0618587db7d203`
 
 The `/btw` interaction semantics and reminder text are compatible with the
 behavior of Anthropic Claude Code's side-question feature. No Claude Code

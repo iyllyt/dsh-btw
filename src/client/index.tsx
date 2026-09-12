@@ -1,7 +1,10 @@
-import type { ClientContext, ISessions, SessionId } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
+import type { ISessions } from '@deepseek-ai/dsh-api-session-controller/client'
+import { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client'
 import type { InputTriggerServiceContract } from '@deepseek-ai/dsh-client-ui-input-trigger/client'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
+import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import { BtwController } from './controller.js'
 import { createBtwInputSource } from './input-source.js'
 import { BtwOverlay, type BtwOverlayInjected } from './overlay.js'
@@ -39,7 +42,8 @@ export function apply(ctx: ClientContext): void {
     name: 'conversation.input.dock',
     id: 'btw-panel',
     order: 2,
-    inject: (sessionId): BtwOverlayInjected => {
+    inject: (scopeId): BtwOverlayInjected => {
+      const sessionId = SessionId(scopeId)
       const actx = sessions.scope(sessionId)
       if (actx === undefined) throw new Error(`dsh-btw: session "${String(sessionId)}" resolved no client scope`)
       const controller = controllerFor(sessionId)

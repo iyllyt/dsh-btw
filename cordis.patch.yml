@@ -1,4 +1,4 @@
-# dsh-btw v2 is a dual-face plugin. The Host half owns the trusted one-shot
+# dsh-btw is a dual-face plugin. The Host half owns the authenticated one-shot
 # RPC; package.json's dsh.client metadata contributes the transient Web UI.
 - insert:
     - id: btw

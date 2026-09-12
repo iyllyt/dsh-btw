@@ -1,4 +1,5 @@
-import { createSnapshotStore, type SessionId, type SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
+import { createSnapshotStore, type SnapshotStore } from '@deepseek-ai/dsh-client-store'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client'
 import type { SubmitOutcome } from '@deepseek-ai/dsh-client-ui-input-trigger/client'
 import { BTW_ASK_ENDPOINT, BTW_RPC_CHANNEL, readAskResponse } from '../shared/protocol.js'

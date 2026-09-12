@@ -1,4 +1,5 @@
-import { CallId, type GenerateOptions, type LlmRuntime, type StreamChunk } from '@deepseek-ai/dsh-llm'
+import { ToolCallId, LlmAdapter, LlmRuntime, createSystemMessage, type GenerateOptions, type StreamChunk } from '@deepseek-ai/dsh-llm'
+import { Context } from '@deepseek-ai/cordis'
 import { describe, expect, it } from 'vitest'
 import { runBtwOneShot } from '../src/host/one-shot.js'
 import type { BtwContextSnapshot } from '../src/host/context-snapshot.js'
@@ -13,6 +14,27 @@ async function* chunks(): AsyncGenerator<StreamChunk> {
 }
 
 describe('runBtwOneShot', () => {
+  it('uses the real official prepared-call runtime once, without writing to a main session', async () => {
+    const ctx = new Context()
+    const runtime = new LlmRuntime(ctx)
+    const requests: GenerateOptions[] = []
+    class Adapter extends LlmAdapter {
+      stream(options: GenerateOptions) { requests.push(options); return chunks() }
+    }
+    const dispose = runtime.registerAdapter(['local-test'], new Adapter())
+    const messages = [createSystemMessage('official history system', 'test')]
+    try {
+      const result = await runBtwOneShot(runtime, {
+        parentSessionId: 'main', config: { provider: 'local-test', model: 'mock' },
+        sharedMessages: messages, messages,
+      }, 'side', new AbortController().signal)
+      expect(result.response).toBe('side answer')
+      expect(requests).toHaveLength(1)
+      expect(requests[0]?.sessionId).toBe('side')
+      expect(requests[0]?.messages).toEqual(messages)
+      expect(requests[0]).not.toHaveProperty('system')
+    } finally { dispose(); await ctx.fiber.dispose() }
+  })
   it('dispatches one request with the exact header and tool catalog', async () => {
     let seen: GenerateOptions | undefined
     const llm = {
@@ -49,7 +71,7 @@ describe('runBtwOneShot', () => {
       yield {
         type: 'block-end',
         index: 0,
-        block: { type: 'tool-call', id: CallId('call-1'), name: 'read_file', arguments: '{}' },
+        block: { type: 'tool-call', id: ToolCallId('call-1'), name: 'read_file', arguments: '{}' },
       }
       yield { type: 'finish', reason: { kind: 'tool-calls' } }
     }

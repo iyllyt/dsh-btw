@@ -1,5 +1,5 @@
-export const BTW_RPC_CHANNEL = '/btw-rpc'
-export const BTW_ASK_ENDPOINT = 'ask'
+export const BTW_RPC_CHANNEL = '/api'
+export const BTW_ASK_ENDPOINT = 'dsh-btw/ask'
 
 export interface BtwAskRequest {
   readonly requestId: string

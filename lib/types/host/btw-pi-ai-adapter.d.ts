@@ -12,7 +12,7 @@ export declare class BtwPiAiAdapter extends PiAiAdapter {
     stream(options: GenerateOptions): AsyncIterable<StreamChunk>;
 }
 /**
- * Read only the constructor hooks of the already registered rc.6 pi-ai
+ * Read only the constructor hooks of the registered 0.1.5-rc.2 pi-ai
  * adapter. No registry entry or live adapter is changed. Other adapters use
  * the public LlmRuntime fallback.
  */

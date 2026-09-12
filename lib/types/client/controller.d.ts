@@ -1,4 +1,5 @@
-import { type SessionId, type SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client';
+import { type SnapshotStore } from '@deepseek-ai/dsh-client-store';
+import type { SessionId } from '@deepseek-ai/dsh-session/types';
 import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client';
 import type { SubmitOutcome } from '@deepseek-ai/dsh-client-ui-input-trigger/client';
 export type BtwOverlayState = {
