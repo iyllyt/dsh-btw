@@ -7,7 +7,15 @@ export interface BtwOverlayInjected {
 }
 
 const markdownLabels: MarkdownLabels = {
-  code: { copyLabel: 'Copy', copiedLabel: 'Copied' },
+  code: {
+    copyLabel: 'Copy',
+    copiedLabel: 'Copied',
+    toolbarLabels: {
+      codeLabel: 'Code',
+      wrapLabel: 'Wrap',
+      unwrapLabel: 'Unwrap',
+    },
+  },
   footnotes: 'Footnotes',
 }
 

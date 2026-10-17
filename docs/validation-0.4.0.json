@@ -1,0 +1,49 @@
+{
+  "pluginVersion": "0.4.0",
+  "validatedOn": "2026-10-17",
+  "timezone": "Asia/Shanghai",
+  "platform": "win32",
+  "node": "24.16.0",
+  "pnpm": "11.21.0",
+  "targetDsh": "0.2.1-rc.2",
+  "codeSha256": {
+    "lib/index.js": "b0df1749330c996332dafda84cbc0361a8cbc4ba7f4961d8f25dd9bc4dc5b6ac",
+    "lib/client.js": "eecce52e2aaad11e5699554045c8af9d87fca7ec65057428db5aec89512d0816"
+  },
+  "dshDependencyGraph": {
+    "cordis": "4.0.5",
+    "schemastery": "3.18.5",
+    "react": "18.3.1 provided by the GUI"
+  },
+  "typecheck": "passed",
+  "build": "passed",
+  "testFilesPassed": 9,
+  "testsPassed": 22,
+  "profileChecks": {
+    "0.2.1-rc.2": {
+      "install": "passed",
+      "composedEntry": "passed",
+      "start": "passed",
+      "unauthenticatedRejected": "passed",
+      "authenticatedRpc": "passed",
+      "uninstall": "passed",
+      "clientBootGraph": "passed"
+    }
+  },
+  "desktopProfileInstall": {
+    "status": "installed",
+    "profile": "desktop",
+    "pluginVersion": "0.4.0",
+    "enginesDsh": "0.2.1-rc.2",
+    "restartRequired": true
+  },
+  "notValidatedByAutomatedChecks": [
+    "real-provider generation",
+    "manual browser interaction",
+    "live-provider cache behavior",
+    "rollback",
+    "Node.js 22",
+    "macOS and Linux"
+  ],
+  "marketplaceApproval": "not-claimed"
+}

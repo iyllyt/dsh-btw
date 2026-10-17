@@ -1,6 +1,11 @@
-import { createUserMessage, type Message, type ToolSchema } from '@deepseek-ai/dsh-llm'
+import {
+  createUserMessage,
+  type LlmCallConfig,
+  type Message,
+  type ToolHistory,
+  type ToolSchema,
+} from '@deepseek-ai/dsh-llm'
 import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { LlmCallConfig } from '@deepseek-ai/dsh-llm'
 
 export const BTW_REMINDER = `<system-reminder>This is a side question from the user. You must answer this question directly in a single response.
 
@@ -24,6 +29,7 @@ export interface BtwContextSnapshot {
   readonly config: LlmCallConfig
   readonly system?: string
   readonly tools?: ToolSchema[]
+  readonly toolHistory: ToolHistory
   readonly sharedMessages: Message[]
   readonly messages: Message[]
 }
@@ -35,9 +41,12 @@ export function balancedMessagePrefix(messages: readonly Message[]): Message[] {
   for (let index = 0; index < messages.length; index++) {
     const message = messages[index]
     if (message === undefined) continue
-    for (const block of message.content) {
-      if (message.role === 'assistant' && block.type === 'tool-call') pending.add(String(block.id))
-      if (message.role === 'user' && block.type === 'tool-result') pending.delete(String(block.toolCallId))
+    if (message.role === 'assistant') {
+      for (const block of message.content) {
+        if (block.type === 'tool-call') pending.add(String(block.id))
+      }
+    } else if (message.role === 'tool') {
+      pending.delete(String(message.toolCallId))
     }
     if (pending.size === 0) lastBalanced = index + 1
   }
@@ -61,9 +70,11 @@ export function snapshotContext(agent: Agent, question: string): BtwContextSnaps
   return {
     parentSessionId: String(agent.session.id),
     config: structuredClone(header.config),
-    // Since DSH 0.1.5 the system prompt (including later updates) is part of
-    // deriveMessages(). Do not duplicate it in GenerateOptions.system.
+    // The system prompt (including later updates) is part of deriveMessages().
+    // Do not duplicate it in GenerateOptions.system.
     ...(header.tools === undefined ? {} : { tools: structuredClone(header.tools) }),
+    // DSH 0.2 projects developer tool additions/removals through this history.
+    toolHistory: agent.session.toolHistory(),
     sharedMessages,
     messages: [...sharedMessages, sideQuestion],
   }

@@ -10,6 +10,7 @@ export type BtwControllerFor = (sessionId: SessionId) => BtwController
 
 function claim(controller: BtwController, commandToken = '/btw'): CommandClaim {
   return {
+    name: 'btw',
     token: `${commandToken} `,
     hint: '<your question>',
     submit: args => controller.ask(args),

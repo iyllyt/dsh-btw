@@ -121,7 +121,7 @@ BTW 不创建普通 DSH Session。可选的审计记录由插件自己的 sidech
 
 ### 6. `skipCacheWrite` 等价处理
 
-目标 DSH 版本没有公开的 `skipCacheWrite` 平台开关。本插件对 pi-ai 的 Anthropic Messages 路由使用每次请求独立的 adapter，并通过 `onPayload` 把一次性 BTW 尾部上的 `cache_control` 标记移动到最后一个共享前缀块，避免为不会复用的尾部写缓存。桥接层固定针对 `0.1.5-rc.1` / `0.1.5-rc.2` 的内部结构，保留新版 auth 和附件解析钩子；不修改已注册的官方 adapter。
+目标 DSH 版本没有公开的 `skipCacheWrite` 平台开关。本插件对 pi-ai 的 Anthropic Messages 路由使用每次请求独立的 adapter，并通过 `onPayload` 把一次性 BTW 尾部上的 `cache_control` 标记移动到最后一个共享前缀块，避免为不会复用的尾部写缓存。桥接层固定针对 `0.2.1-rc.2` 的内部结构，保留 auth 和附件解析钩子；不修改已注册的官方 adapter。直连路径同时复刻 0.2.1 的请求投影，避免和父请求的 prompt/cache 前缀分叉。
 
 原生 DeepSeek 自动服务端缓存没有对应的 wire-level 关闭参数，因此保持 provider-managed，不伪造客户端能力。
 
@@ -129,32 +129,30 @@ BTW 不创建普通 DSH Session。可选的审计记录由插件自己的 sidech
 
 ### 环境要求
 
-- Node.js `^22.19.0 || >=24.0.0`（本次实测为 `24.16.0`）
+- Node.js `^22.19.0 || >=24.0.0`（本次实测为 `24.16.0`，DSH 0.2.1 桌面运行时为 `24.21.0`）
 - pnpm / Corepack
-- DeepSeek Harness `0.1.5-rc.1` 或 `0.1.5-rc.2`
-- 已经可以正常启动的 `web` profile
+- DeepSeek Harness `0.2.1-rc.2`
+- 已经可以正常启动的 `desktop` profile（桌面 GUI）或 `web` profile
 
-> `0.3.0` 不再面向旧版 `0.1.0-rc.6`。请先升级 DSH，并备份现有 Profile。兼容范围以精确版本记录为准，不代表后续版本自动兼容；完整证据及尚未验证的项目见[兼容性记录](./docs/compatibility-0.3.0.md)。
+> `0.4.0` 面向 DSH `0.2.1-rc.2`；`0.1.5-rc.1` / `0.1.5-rc.2` 已不在支持范围内。请先升级 DSH，并备份现有 Profile。兼容范围以精确版本记录为准，不代表后续版本自动兼容；完整证据及尚未验证的项目见[兼容性记录](./docs/compatibility-0.4.0.md)。
 
 ### 方法一：直接从 GitHub 安装
 
 ```bash
-dsh plugin --profile web add github:iyllyt/dsh-btw --ignore-scripts
-dsh --profile web --dump-config
-dsh --profile web
+dsh plugin --profile desktop add github:iyllyt/dsh-btw --ignore-scripts
 ```
 
-先备份目标 Profile，并使用已经确认版本的 DSH。若没有全局命令，可使用 `npx @deepseek-ai/dsh@0.1.5-rc.1`。安装后停止原 DSH 进程再启动，并刷新浏览器；新增 bundle 不能只依赖 patch 热更新。
+若使用纯 Web profile，把 `desktop` 换成 `web`；`web` profile 可以用 `dsh --profile web --dump-config` 核对 `id: btw`。`desktop` profile 由 Electron 应用独占，CLI 的 `--dump-config` 会拒绝读取，请改为检查 profile 的 `package.json` 与 `node_modules/dsh-btw/package.json`。先备份目标 Profile，并使用已经确认版本的 DSH。若没有全局命令，可使用 `npx @deepseek-ai/dsh@0.2.1-rc.2`。安装后完全退出并重新启动 DSH 桌面应用，再刷新 GUI；新增 bundle 不能只依赖 patch 热更新。
 
 仓库提交了预构建的 `lib/`，因此从 GitHub 安装时不需要授权执行 `prepare` 构建脚本。生产环境建议锁定 commit：
 
 ```bash
-dsh plugin --profile web add github:iyllyt/dsh-btw#<commit-sha> --ignore-scripts
+dsh plugin --profile desktop add github:iyllyt/dsh-btw#<commit-sha> --ignore-scripts
 ```
 
 ### 方法二：本地打包安装（本次实测方式）
 
-不要直接 `add ./dsh-btw` 或链接开发目录：Node 可能沿链接加载仓库里的 rc.2 开发依赖，而宿主是 rc.1。打包安装避免了这个风险，但仍应检查实际依赖版本。
+不要直接 `add ./dsh-btw` 或链接开发目录：Node 可能沿链接加载仓库里的开发依赖，而宿主使用自己的 DSH 依赖图。打包安装避免了这个风险，但仍应检查实际依赖版本。
 
 仓库已包含预构建 `lib/`，仅安装无需重新构建。在仓库根目录执行以下 PowerShell 命令，`dsh` 使用你原来的宿主：
 
@@ -163,10 +161,8 @@ $dshProfileHome = if ($env:DSH_HOME) { $env:DSH_HOME } else { Join-Path $env:USE
 $artifactDir = Join-Path $dshProfileHome 'plugin-artifacts'
 New-Item -ItemType Directory -Force -Path $artifactDir | Out-Null
 npm.cmd pack --ignore-scripts --pack-destination "$artifactDir"
-dsh plugin --profile web add "$artifactDir/dsh-btw-0.3.0.tgz" --ignore-scripts
-dsh --profile web --dump-config
-# 停止原 DSH 后再启动：
-dsh --profile web
+dsh plugin --profile desktop add "$artifactDir/dsh-btw-0.4.0.tgz" --ignore-scripts
+# 完全退出并重新启动 DSH 桌面应用后生效
 ```
 
 如果修改过源码，先执行开发验证，再按上面的步骤打包：
@@ -178,12 +174,12 @@ pnpm run build
 pnpm test
 ```
 
-`--dump-config` 中应出现 `id: btw`。保留安装时引用的 tarball，以便重装；后续更新使用新版本号和新文件名。Windows 执行策略、peer 警告及认证排查见[安装说明](./docs/install-windows.md)。
+`web` profile 的 `--dump-config` 中应出现 `id: btw`；`desktop` profile 以 `package.json` 的 bundles 和已安装的 `dsh-btw` 版本为准。保留安装时引用的 tarball，以便重装；后续更新使用新版本号和新文件名。Windows 执行策略、peer 警告及认证排查见[安装说明](./docs/install-windows.md)。
 
 ### 卸载
 
 ```bash
-dsh plugin --profile web remove dsh-btw
+dsh plugin --profile desktop remove dsh-btw
 ```
 
 卸载插件不会自动删除已经写入 `$DSH_HOME/btw-sidechains/v1` 的私有审计记录。
@@ -204,7 +200,7 @@ bundle 自带以下默认配置：
           maxSessions: 500
 ```
 
-如需覆盖默认值，在 `$DSH_HOME/profiles/web/cordis.patch.yml` 中追加同一个 `id: btw` 的完整插件行。例如完全禁用 BTW 存档：
+如需覆盖默认值，在 `$DSH_HOME/profiles/desktop/cordis.patch.yml`（或 `web` profile 对应文件）中追加同一个 `id: btw` 的完整插件行。例如完全禁用 BTW 存档：
 
 ```yaml
 - insert:
@@ -245,7 +241,7 @@ src/
 │   ├── context-snapshot.ts   # 父会话请求头与平衡上下文快照
 │   ├── one-shot.ts           # 无工具的一次性模型生成
 │   ├── cache-boundary.ts     # Anthropic 缓存边界迁移
-│   ├── btw-pi-ai-adapter.ts  # 0.1.5 请求级缓存 adapter
+│   ├── btw-pi-ai-adapter.ts  # 0.2.1 请求级缓存 adapter
 │   └── sidechain-kernel.ts   # 隐藏 JSONL / memory / none 存储
 └── shared/
     └── protocol.ts           # Client/Host RPC 协议与运行时校验
@@ -266,16 +262,16 @@ pnpm run build
 
 ## 兼容性
 
-- 当前版本：`0.3.0`
-- 目标 DSH：`0.1.5-rc.1`、`0.1.5-rc.2`；两个 alpha 版本未验证，声明为 `unknown`
+- 当前版本：`0.4.0`
+- 目标 DSH：`0.2.1-rc.2`（Web 与 Desktop GUI 同一套客户端运行时）
 - Node.js：`^22.19.0 || >=24.0.0`
-- 已验证：类型检查、22 项自动测试、构建，以及两个 DSH 版本的隔离 Web Profile 安装、启动、认证 RPC 和卸载。
-- 用户实测：2026-09-12，用户反馈 Windows / DSH `0.1.5-rc.1` 上实际使用通过；模型及完整交互测试清单未提供，不扩展为所有场景通过。
+- 已验证：类型检查、22 项自动测试、构建，以及隔离 Profile 的安装、启动、认证 RPC 和卸载。
+- 0.4.0 适配点：宿主请求带上 `session.toolHistory()`；pi-ai 直连路径复刻 0.2.1 的 `projectToolUpdates` / 文件 / 图片投影；客户端补齐 `MarkdownLabels.code.toolbarLabels`；`CommandClaim` 增加 `name`；工具结果按 0.2.1 的 `role: 'tool'` 消息平衡。
 - 自动检查未覆盖：真实模型生成、浏览器完整交互、真实服务缓存行为、Node.js 22、Linux/macOS、回滚。`compatible` 不等于所有环境和场景均已验收。
 - pi-ai 缓存桥接会在预期的 adapter internals 改变时 fail closed；其他 provider 仍走 DSH 公共 `LlmRuntime.prepareCall()` 路径。
-- 本地 `pnpm-workspace.yaml` 固定官方 DSH 依赖图，避免其预发布版本范围把 `rc.1` 和 `rc.2` 混装。它不替换官方组件，也不会修改用户 Profile。
+- 本地 `pnpm-workspace.yaml` 固定官方 DSH 依赖图，并使用 `nodeLinker: hoisted` 让本仓库在 Windows junction 布局下解析全部传递依赖；该设置不影响已安装的 Profile。
 
-完整验证过程及复现命令见[兼容性记录](./docs/compatibility-0.3.0.md)。
+完整验证过程及复现命令见[兼容性记录](./docs/compatibility-0.4.0.md)。
 
 ## License
 

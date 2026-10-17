@@ -1,6 +1,6 @@
-# Windows 安装说明 — 0.3.0
+# Windows 安装说明 — 0.4.0
 
-2026-09-12，用户反馈 Windows / DSH `0.1.5-rc.1` 上实际使用通过。安装载体为 tarball；独立自动检查也覆盖 rc.1、rc.2 的安装、启动、认证 RPC 和卸载。
+2026-10-17，在 Windows / DSH `0.2.1-rc.2` 上完成了类型检查、22 项自动测试、构建，以及隔离 `web` Profile 的安装、启动、认证 RPC 和卸载。桌面 GUI 使用 `desktop` profile，安装方式相同，但该 profile 由 Electron 应用独占，命令行 `--dump-config` 会拒绝读取。
 
 ## 安装前
 
@@ -15,8 +15,9 @@
 | --- | --- |
 | `.ps1` 被执行策略拦截 | 使用 `npm.cmd`、`pnpm.cmd` 或由 node 调用 CLI JavaScript，不必降低系统执行策略。 |
 | `dsh plugin --help` 显示 pnpm 帮助 | 此版本的 plugin 管理命令会转发参数给 pnpm。 |
-| 缺少 `--profile` | 使用 `dsh plugin --profile web add <artifact> --ignore-scripts`；参数位于 plugin 之后、add 之前。 |
-| 装完没有 `/btw` | 停止并重新启动 DSH，再刷新浏览器；patch 热更新不等于新 bundle 已装载。 |
+| 缺少 `--profile` | 使用 `dsh plugin --profile desktop add <artifact> --ignore-scripts`（或 `web`）；参数位于 plugin 之后、add 之前。 |
+| `profile "desktop" is managed exclusively by the Electron application` | `desktop` profile 由桌面应用管理，不能用 CLI 的 `--dump-config`/启动命令读取；安装后完全退出并重启桌面应用。 |
+| 装完没有 `/btw` | 完全退出并重新启动 DSH 桌面应用，再刷新 GUI；patch 热更新不等于新 bundle 已装载。 |
 | HTTP 401 | 认证先于端点处理；先用正常 DSH 启动链接认证。401 不能证明路由存在或不存在。不要公开 token/cookie。 |
 | peer dependencies 警告 | `autoInstallPeers: false` 的 Profile 可能由宿主提供依赖；核对版本后才能接受，不能一律忽略或盲目补装官方组件。 |
 | `-NoProxy` 参数不存在 | 检查 PowerShell 版本，Windows PowerShell 5.1 不支持该参数。 |
@@ -24,9 +25,12 @@
 
 ## 核对实际安装
 
-`--dump-config` 应包含一个插件自有 `id: btw`。用 `createRequire()` 锚定安装目录中插件的 `package.json` 检查依赖；不要从仓库目录下的同名包 self-reference 推断安装结果。
+隔离 `web` Profile 的 `--dump-config` 应包含一个插件自有 `id: btw`。桌面 `desktop` profile 不能通过 CLI dump，改为检查：
 
-本次只读复查确认 `dsh-llm`、`dsh-llm-pi-ai`、`dsh-session` 均解析到宿主 rc.1。浏览器模块加载、实际问答和缓存行为是不同层次的验证。
+- `$DSH_HOME/profiles/desktop/package.json` 的 `dsh.profile.bundles` 含 `dsh-btw`；
+- `$DSH_HOME/profiles/desktop/node_modules/dsh-btw/package.json` 的 `version` 为 `0.4.0`，`engines.dsh` 为 `0.2.1-rc.2`。
+
+用 `createRequire()` 锚定安装目录中插件的 `package.json` 检查依赖；不要从仓库目录下的同名包 self-reference 推断安装结果。浏览器模块加载、实际问答和缓存行为是不同层次的验证。
 
 ## 更新与隐私
 
@@ -34,4 +38,4 @@
 - 更新后重启 DSH。DSH 自身升级后也应复测：缓存桥接只检查部分内部结构，不能保证所有不兼容都 fail closed；某些情况可能退回公共调用路径。
 - 默认 `private-jsonl` 会在 `$DSH_HOME/btw-sidechains/v1` 保存问题、共享上下文快照和回答，不一定包含全部历史消息。需要时改为 `memory` 或 `none`；卸载不会删除已有记录。
 
-具体测试范围见[兼容性记录](./compatibility-0.3.0.md)。
+具体测试范围见[兼容性记录](./compatibility-0.4.0.md)。

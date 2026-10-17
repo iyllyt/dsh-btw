@@ -10,19 +10,21 @@ const assistant = (content: Message['content']) => createAssistantMessage({
 })
 
 describe('context snapshot', () => {
-  it('preserves system-message updates from the 0.1.5 history without duplicating the system prompt', () => {
-    const messages = [createSystemMessage('first system', 'test'), user('hello'),
-      createSystemMessage('updated system', 'test'), user('active question')]
+  it('preserves system-message updates without duplicating the system prompt', () => {
+    const messages = [createSystemMessage('first system'), user('hello'),
+      createSystemMessage('updated system'), user('active question')]
     const header = { config: { provider: 'mock', model: 'same' },
       tools: [{ name: 'read', description: 'read', parameters: { type: 'object' } }] }
+    const toolHistory = { tools: [], updates: [] }
     const agent = { session: { id: 'parent', requestHeader: () => header,
-      deriveMessages: () => messages } } as unknown as Agent
+      deriveMessages: () => messages, toolHistory: () => toolHistory } } as unknown as Agent
     const snapshot = snapshotContext(agent, 'side question')
     expect(snapshot.sharedMessages).toEqual(messages)
     expect(snapshot.messages.slice(0, -1)).toEqual(messages)
     expect(snapshot).not.toHaveProperty('system')
     expect(snapshot.config).not.toBe(header.config)
     expect(snapshot.tools).not.toBe(header.tools)
+    expect(snapshot.toolHistory).toBe(toolHistory)
     expect(messages).toHaveLength(4)
   })
 
